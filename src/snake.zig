@@ -19,7 +19,7 @@ const pixelsize = 20;
 
 const map_width = screenWidth / pixelsize;
 const map_height = screenHeight / pixelsize;
-var snake_size: u16 = 6;
+var snake_size: u16 = undefined;
 var snake_head: [2]i16 = [_]i16{ 0, 0 };
 var food_position: [2]i16 = [_]i16{ 1, 1 };
 
@@ -38,6 +38,10 @@ var y_pos: i16 = 0;
 
 const allocator = std.heap.page_allocator;
 fn draw_map() void {
+    ray.ClearBackground(ray.BLACK);
+    snake_size = 6;
+    snake_tail = linked_list{};
+
     for (0..map_width) |x| {
         for (0..map_height) |y| {
             var mapxy = [_]i16{ @intCast(x), @intCast(y) };
@@ -68,6 +72,8 @@ fn push_tail(new_tail: [2]i16) !void {
     if (removed_tail) |node| {
         draw_pixel(node.data, true, ray.BLACK);
         draw_pixel(node.data, false, ray.GREEN);
+        allocator.free(node.data);
+        // allocator.free(node);
     }
 }
 fn run_snake() !void {
@@ -75,7 +81,10 @@ fn run_snake() !void {
 
     snake_head[0] += current_dir[0];
     snake_head[1] += current_dir[1];
-
+    if (ray.GetImageColor(ray.LoadImageFromScreen(), (snake_head[0] * pixelsize) + (pixelsize / 2), (snake_head[1] * pixelsize) + (pixelsize / 2)).g >= 200) {
+        draw_map();
+        std.debug.print("game over", .{});
+    }
     draw_pixel(&snake_head, true, ray.GREEN);
 }
 
